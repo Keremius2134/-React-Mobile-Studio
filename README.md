@@ -1,1 +1,42 @@
-# -React-Mobile-Studio
+⚛️ React++ Studio Mobile 
+
+​React++ Studio Mobile, Android ekosisteminde (özellikle AIDE gibi mobil IDE ortamlarında) harici bir bilgisayar (PC) veya bulut bağımlılığı olmaksızın doğrudan cihaz üzerinde native React 18, JSX, ES6+ JavaScript, HTML5 ve CSS3 projeleri geliştirmeyi, anında sandbox ortamında test etmeyi, Gemini AI ile akıllı kod üretmeyi/optimize etmeyi ve Deneysel Web-to-APK motoruyla paketlemeyi hedefleyen uçtan uca mobil geliştirme stüdyosudur.
+
+​📌 İçindekiler ​Proje Vizyonu ve Özet ​Mimari ve Teknik Çalışma Zamanı (Runtime) Altyapısı ​UI/UX ve Görsel Bileşenler ​Google Gemini AI Entegrasyon Detayları ​Web-to-APK Derleme, Modifikasyon ve İmzalama Motoru ​Bilinen Sınırlamalar ve Sorun Giderme (Troubleshooting) ​Proje Sınıf ve Dosya Ağacı Hiyerarşisi ​Kurulum, Derleme (AIDE Build) ve Yayınlama Kılavuzu ​Gelecek Yol Haritası (Roadmap) ​🎯 Proje Vizyonu ve Özet 
+
+​Mobil cihazların işlemci kapasitesi günümüzde gelişmiş kod editörlerini ve web runtime motorlarını rahatlıkla kaldırabilecek seviyededir. Ancak mobilde React geliştirmek genellikle ağır Node.js/Metro bundler kurulumları veya kısıtlı web siteleri gerektirir. React++ Studio Mobile, saf Java/Android altyapısıyla hafif, hızlı ve çevrimdışı/çevrimiçi hibrit bir IDE deneyimi sunar.
+
+​🏛️ Mimari ve Teknik Çalışma Zamanı (Runtime) Altyapısı ​1. Android Native Katmanı ​Dil: Java (Android API 21+ uyumlu, AIDE build pipeline ile tam entegre). ​Activity Yapısı: ​SplashActivity: Uygulama açılış sekansı. ​MainActivity: Çoklu sekmeli editör, WebView önizleme katmanı, terminal konsol köprüsü (JavaScript Bridge) ve AI modal/dialog yönetim paneli. ​2. Sandbox WebView ve Sanal Origin Bağlamı ​CORS / CORS-bypass Çözümü: Yerel file:// protokolü kısıtlamalarını ve modül yükleme (ES modules / CDN fetch) güvenlik duvarlarını aşmak için webView.loadDataWithBaseURL("https://localhost/", htmlContent, "text/html", "UTF-8", "https://localhost/") mekanizması kullanılır. ​State Persist: Kod değişiklikleri anbellekte tutulur, localStorage/sessionStorage izolasyonu sağlanır. ​3. JSX ve React 18 Transpiler Pipeline ​Transpiler: @babel/standalone CDN betiği üzerinden istemci taraflı (client-side) anlık on-the-fly JSX -> ES5/ES6 dönüşümü. ​React Render Döngüsü: ReactDOM.createRoot(document.getElementById('root')).render(<App/>) standardına uygun modern React 18 Concurrent/Root API entegrasyonu. ​Stil Enjeksiyonu: style.css sekmesindeki kurallar dinamik olarak <style id="dynamic-styles"> etiketleri üzerinden DOM'a map edilir. ​🎨 UI/UX ve Görsel Bileşenler ​1. Modern Açılış (Splash) Ekranı (SplashActivity) ​Görsel Tema: Koyu mod bazlı (#121212) minimalist lüks UI. ​Animasyonlar (res/anim/): ​fade_in_scale.xml: Logo ve başlık için 1000ms alfa (0.0 -> 1.0) ve ölçek (0.7 -> 1.0 pivot center) kombinasyonu, fillAfter="true". ​blink.xml: Alt slogan (#80FFFFFF, italic 13sp) için 800ms periyotlu sonsuz tersine yanıp sönme (repeatCount="infinite", repeatMode="reverse"). ​Geçiş Zamanlaması: 2.5 saniye (Handler.postDelayed) sonra finish() tetiklenerek ana editöre akıcı geçiş. ​2. Çoklu Sekmeli Kod Editörü (Multi-Tab Editor) ​index.html: Kök HTML kabuğu, CDN script importları (react, react-dom, babel), root container. ​App.jsx: Ana React bileşeni, hooks (useState, useEffect) desteği. ​style.css: Özelleştirilebilir CSS scope kuralları. ​script.js: Saf yardımcı JavaScript fonksiyonları. ​3. Hızlı Sembol Barı (Symbol Bar) ​Mobil klavyelerde tiplemesi zor olan <, >, {, }, =, /, ;, (, ), [ ve ] karakterleri için yatay kaydırılabilir mikro-bar (Cursor pozisyonuna insert desteğiyle). ​4. Dahili Terminal / Konsol Logger Bridge (console.log/error/warn interceptor) ​WebView içindeki console.log, console.error, console.warn çıktıları window.console override edilerek Java tarafına (AndroidBridge) post edilir; terminal sekmesinde satır numarası ve hata rengiyle (#FF5555 / #50FA7B) canlı render edilir. ​🧠 Google Gemini AI Entegrasyon Detayları ​API Servisi: Google Gemini Flash API (hızlı yanıt süresi ve düşük token maliyeti optimizasyonu). ​Prompt Mühendisliği / Görev Setleri: ​Kodu Optimize Et: Mevcut App.jsx kodunu inceler, re-render maliyetlerini, gereksaltı state'leri ve clean-code ihlallerini düzeltir. ​Hataları Düzelt (Auto-Patch): Terminaldeki log/hata çıktısını alarak koddaki syntax/runtime hatasını otomatik onarır. ​İstediğin Kodu Üret (Text-to-React): Doğal dildeki istemi ("Karanlık modlu todo listesi yap, ekleme silme olsun") alıp doğrudan render edilebilir JSX bileşenine çevirir. ​Resilience (Model Fallback): API yoğunluğu (HTTP 503 Service Unavailable / Rate Limit 429) durumunda otomatik retry ve alternatif model dizilimine (gemini-flash varyantları) kusursuz fallback. ​📦 Web-to-APK Derleme, Modifikasyon ve İmzalama Motoru 
+
+​Uygulamanın en kritik deneysel modülü, kendi APK paketini şablon olarak kullanıp (context.getApplicationInfo().sourceDir), kullanıcı kodlarını gömerek imzalı APK çıkaran hibrit derleme motorudur.
+
+​1. Self-Extraction ve Şablonlama (WebToApkBuilder.java) ​Kendi APK binary akışını ZipInputStream ile okur. ​META-INF/ (eski imzalar) ve varsayılan assets/index.html girdilerini filtreler/atlar. ​AndroidManifest.xml binary akışını bayt düzeyinde manipüle eder. ​2. Binary Manifest Patching (patchManifest) ​Paket adı (com.react.myreact -> com.react.userapp, 17 bayt / karakter dengesi korunarak) ve uygulama etiketi (React++ Studio -> özel sanitize edilmiş ad, bayt uzunluğu pad/truncate ile hizalanarak) bayt dizisi değişimine uğratılır. ​UTF-8 ve UTF-16LE imza tablosu çakışmalarını önlemek için exact byte search/replace (replaceExactBytes) uygulanır. ​3. Sabit Geliştirici Anahtarı / Keystore Mekanizması (ApkSignerHelper.java) ​Uygulamanın özel dizininde (context.getFilesDir()) kalıcı developer_private.key (PKCS#8 RSA 2048-bit) ve developer_public.key (X.509) üretilir/saklanır. ​Her APK üretiminde rastgele imza üretimi yerine sabit imza politikası benimsenerek imza çakışması (signature mismatch) önlenmeye çalışılır. ​4. Manifest / Cert / RSA İmza Pipeline'ı ​META-INF/MANIFEST.MF: Tüm arşiv girdilerinin SHA-256 digest hash listesi (Base64.NO_WRAP). ​META-INF/CERT.SF: MANIFEST.MF dosyasının SHA-256 imzası. ​META-INF/CERT.RSA: SHA256withRSA algoritmasıyla özel anahtar üzerinden imzalanmış kriptografik blok. ​🛠️ Bilinen Sınırlamalar ve Sorun Giderme (Troubleshooting) Sorun / Bulgı
+
+Teknik Kök Neden
+
+Geçici / Kalıcı Çözüm
+
+"Uygulama yüklenmedi" (App Not Installed) Hatası
+
+Android Package Installer, AXML binary patch sonrası CRC/ZIP align veya z-offset / v2/v3 signature scheme eksikliklerinden dolayı paketi unverified sayabilir.
+
+Eski sürümü tamamen kaldır (Settings > Apps > Uninstall). Play Protect uyarısında "Yine de yükle" seç. V2/V3 full signature signer olmadığı için bazı Android 11+ sürümleri saf zip-signed APK'ları reddedebilir.
+
+Türkçe Karakter / Bayt Uyumsuzluğu
+
+AXML binary string pool uzunluk baytları (character/byte count offset) dinamik string substitution sırasında kayabilir.
+
+sanitizeAscii ile ASCII dönüşümü zorlanır, bayt uzunluğu padOrTruncateAscii ile sabitlenir.
+
+CORS / harici modül fetch hatası
+
+https://localhost/ sanal origin dışı dış kaynaklar bazı policy'lere takılabilir.
+
+CDN tabanlı ESM/UMD bundle kullanılması önerilir.
+
+🚀 Kurulum, Derleme (AIDE Build) ve Yayınlama Kılavuzu ​AIDE Hazırlığı: Projeyi AIDE içinde açın (AppProjects/ReactPlusStudio). ​Resource & Animation Kontrolü: res/anim/fade_in_scale.xml, res/anim/blink.xml ve res/layout/activity_splash.xml dosyalarının yerinde olduğundan emin olun. ​Manifest Entegrasyonu: AndroidManifest.xml dosyasındaki SplashActivity (LAUNCHER) ve MainActivity kayıtlarını doğrulayın. ​Build & Run: AIDE menüsünden Build / Run komutunu verin. ​APK Dışa Aktarma / Paylaşım: ​AIDE Export Signed APK veya dosya yöneticisinden bin/ / app/build/outputs/apk/debug/ yolundaki APK'yı alın. ​GitHub reponuzda Releases > Create a new release (v1.0.0) alanına .apk dosyasını binaries olarak ekleyin. ​🗺️ Gelecek Yol Haritası (Roadmap) ​[ ] V2/V3 APK Signature Scheme (apksigner native port veya Java-based full apk signature block injection) desteği ile "Uygulama yüklenmedi" sorununu kökten çözmek. ​[ ] Monaco Editor / CodeMirror mobile optimization entegrasyonu (syntax highlighting gelişimi). ​[ ] GitHub REST API entegrasyonu ile doğrudan cep telefonundan repo commit/push yeteneği. ​[ ] Offline Babel cache katmanı. ​📥 İndirme ve Katkıda Bulunma 
+
+​Projenin güncel derlenmiş .apk sürümünü Releases sekmesinden indirebilir; hata bildirimleri, pull request'ler ve katkılarınız için Issues bölümünü kullanabilirsiniz.
+
+​Kodla, Önizle, Üret: Cebindeki Mobil React IDE!
+
